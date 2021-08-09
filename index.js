@@ -94,23 +94,39 @@ app.post('/reservations', (req, res) => {
 
     currentTime = getCurrentTime();
     reservationsLength = reservationsLength + 1;
-    const reservation = {
-        //{ id: 1, license: 'BJT001', checkIn: '08:30:00', spaceId: 3 },
-        id: reservationsLength,
-        license: req.body.license,
-        checkIn: currentTime,
-        spaceId: 1
+    var freespace = 0;
+    var flag = false;
+    spaces.forEach(element => {
+        if(element.state == "free" && !flag){
+            freespace = element.id;
+            element.state = "in-use";
+            flag = true;
+        }
+    });
+    if(freespace != 0){
+        const reservation = {
+            id: reservationsLength,
+            license: req.body.license,
+            checkIn: currentTime,
+            spaceId: freespace
+        }
+        reservations.push(reservation);
+        res.send(reservation);
+    }else{
+        res.status(400).send('There are no available spaces for reservations');
     }
-    reservations.push(reservation);
-    res.send(reservation);
+   
 });
 
 app.delete('/reservations/:id', (req, res) => {
     var reservation = reservations.find(r => r.id === parseInt(req.params.id));
+    var space = spaces.find(s => s.id === reservation.spaceId);
     if(!reservation) return res.status(404).send('The reservation with the given ID was not found'); // 404 Not Found
 
     const index = reservations.indexOf(reservation);
     reservations.splice(index, 1);
+
+    space.state = 'free'
 
     res.send(reservation);
 });
