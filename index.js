@@ -12,13 +12,16 @@ const spaces = [
     { id: 3, name: 'space3', state: 'in-use'},
     { id: 4, name: 'space4', state: 'in-use'},
     { id: 5, name: 'space5', state: 'in-use'},
-]
+];
 
 const reservations = [
     { id: 1, license: 'BJT001', checkIn: '08:30:00', spaceId: 3 },
     { id: 2, license: 'ASD004', checkIn: '09:30:10', spaceId: 4 },
     { id: 3, license: 'RTY005', checkIn: '10:30:20', spaceId: 5 },
-]
+];
+
+spacesLength = 5;
+reservationsLength = 3;
 
 app.get('/', (req, res) => {
     return res.status(200).send('Hello World');
@@ -36,12 +39,13 @@ app.get('/spaces/:id', (req, res) => {
 });
 
 app.post('/spaces', (req, res) => {
-    const { error } = validateSpace(req.body); // result.error
+    const { error } = validateSpaceName(req.body); // result.error
     if (error) {
         return res.status(400).send(error.details[0].message);
     } 
+    spacesLength = spacesLength + 1;
     const space = {
-        id: spaces.length + 1,
+        id: spacesLength,
         name: req.body.name,
         state: 'free'
     }
@@ -53,7 +57,7 @@ app.put('/spaces/:id', (req, res) => {
     var space = spaces.find(s => s.id === parseInt(req.params.id));
     if(!space) return res.status(404).send('The space with the given ID was not found'); // 404 Not Found
 
-    const { error } = validateSpace(req.body); // result.error
+    const { error } = validateSpaceInfo(req.body); // result.error
     if (error) {
         return res.status(400).send(error.details[0].message);
     }
@@ -66,13 +70,16 @@ app.put('/spaces/:id', (req, res) => {
 
 app.delete('/spaces/:id', (req, res) => {
     var space = spaces.find(s => s.id === parseInt(req.params.id));
-    if(!space) return res.status(404).send('The space with the given ID was not found'); // 404 Not Found
+    if(space.state == "free"){
+        if(!space) return res.status(404).send('The space with the given ID was not found'); // 404 Not Found
 
-    const index = spaces.indexOf(space);
-    spaces.splice(index, 1);
+        const index = spaces.indexOf(space);
+        spaces.splice(index, 1);
 
-    res.send(space);
-
+        res.send(space);
+    }else{
+        return res.status(404).send('The space with the given ID is currently in use'); // 404 Not Found
+    }
 });
 
 app.get('/reservations', (req, res) => {
@@ -86,9 +93,10 @@ app.post('/reservations', (req, res) => {
     } 
 
     currentTime = getCurrentTime();
+    reservationsLength = reservationsLength + 1;
     const reservation = {
         //{ id: 1, license: 'BJT001', checkIn: '08:30:00', spaceId: 3 },
-        id: reservations.length + 1,
+        id: reservationsLength,
         license: req.body.license,
         checkIn: currentTime,
         spaceId: 1
@@ -107,7 +115,15 @@ app.delete('/reservations/:id', (req, res) => {
     res.send(reservation);
 });
 
-function validateSpace(space){
+function validateSpaceName(space){
+    const schema = {
+        name: Joi.string().min(3).required()
+    };
+
+    return result = Joi.validate(space, schema);
+}
+
+function validateSpaceInfo(space){
     const schema = {
         name: Joi.string().min(3).required(),
         state: Joi.string().required()
