@@ -120,15 +120,32 @@ app.post('/reservations', (req, res) => {
 
 app.delete('/reservations/:id', (req, res) => {
     var reservation = reservations.find(r => r.id === parseInt(req.params.id));
-    var space = spaces.find(s => s.id === reservation.spaceId);
+    
     if(!reservation) return res.status(404).send('The reservation with the given ID was not found'); // 404 Not Found
 
+    var space = spaces.find(s => s.id === reservation.spaceId);
     const index = reservations.indexOf(reservation);
     reservations.splice(index, 1);
 
     space.state = 'free'
 
     res.send(reservation);
+});
+
+app.get('*', (req, res) => {
+    res.status(405).send('Method does not exist');
+});
+
+app.post('*', (req, res) => {
+    res.status(405).send('Method does not exist');
+});
+
+app.put('*', (req, res) => {
+    res.status(405).send('Method does not exist');
+});
+
+app.delete('*', (req, res) => {
+    res.status(405).send('Method does not exist');
 });
 
 function validateSpaceName(space){
