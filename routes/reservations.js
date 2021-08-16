@@ -1,12 +1,88 @@
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
-const appDb = require('../shared/db')
+const appDb = require('../shared/db');
+
+/**
+ * @swagger
+ *  components:
+ *      schemas:
+ *          Reservation:
+ *              type: object
+ *              required:
+ *                  - license
+ *              properties:
+ *                  id:
+ *                      type: int
+ *                      description: The auto-generated id of the reservation
+ *                  license:
+ *                      type: string
+ *                      description: License plate of vehicle
+ *                  checkIn:      
+ *                      type: string
+ *                      description: Check-in time
+ *                  spaceId:
+ *                      type: int
+ *                      description: The auto-assigned id of the space
+ *              example:
+ *                  id: 7
+ *                  license: AAA-111
+ *                  checkIn: 08:30:00
+ *                  spaceId: 1                  
+ */
+
+/**
+ * @swagger
+ * tags:
+ *  name: Reservations
+ *  description: The reservations managing API
+ */
+
+/**
+ * @swagger
+ * /reservations:
+ *   get:
+ *     summary: Returns the list of all the reservations
+ *     tags: [Reservations]
+ *     responses:
+ *       200:
+ *         description: The list of the reservations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Reservation'
+ */
 
 router.get('/', (req, res) => {
     res.send(appDb.reservations);
 });
 
+/**
+ * @swagger
+ * /reservations:
+ *   post:
+ *     summary: Create a new reservation
+ *     tags: [Reservations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Reservation'
+ *     responses:
+ *       200:
+ *         description: The reservation was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Reservation'
+ *       400:
+ *         description: License length must be at least 6 characters long || There are no available spaces for reservations
+ *       500:
+ *         description: Some server error
+ */
 router.post('/', (req, res) => {
     const { error } = validateReservationLicense(req.body); // result.error
     if (error) {
@@ -15,21 +91,21 @@ router.post('/', (req, res) => {
 
     currentTime = getCurrentTime();
     reservationsLength = appDb.reservationsLength + 1;
-    var freespace = 0;
+    var freeSpace = 0;
     var flag = false;
     appDb.spaces.forEach(element => {
         if(element.state == "free" && !flag){
-            freespace = element.id;
+            freeSpace = element.id;
             element.state = "in-use";
             flag = true;
         }
     });
-    if(freespace != 0){
+    if(freeSpace != 0){
         const reservation = {
             id: reservationsLength,
             license: req.body.license,
             checkIn: currentTime,
-            spaceId: freespace
+            spaceId: freeSpace
         }
         appDb.reservations.push(reservation);
         res.send(reservation);
@@ -39,6 +115,28 @@ router.post('/', (req, res) => {
    
 });
 
+/**
+ * @swagger
+ * /reservations/:id:
+ *   delete:
+ *     summary: Remove the reservation by id
+ *     tags: [Reservations]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The reservation id
+ * 
+ *     responses:
+ *       200:
+ *         description: The reservation was deleted
+ *       404:
+ *         description: The reservation was not found 
+ *       500:
+ *         description: Some error happened
+ */
 router.delete('/:id', (req, res) => {
     var reservation = appDb.reservations.find(r => r.id === parseInt(req.params.id));
     
