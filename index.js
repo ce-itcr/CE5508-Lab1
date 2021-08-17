@@ -1,4 +1,7 @@
 const express = require('express');
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const swaggerUI = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -40,4 +43,10 @@ app.post('*', (req, res) => { res.status(405).send('Method does not exist'); });
 app.put('*', (req, res)  => { res.status(405).send('Method does not exist'); });
 app.delete('*', (req, res)  => { res.status(405).send('Method does not exist'); });
 
-app.listen(PORT, () => console.log(`Listening on port ${PORT}...`));
+
+const sslServer = https.createServer({
+    key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+}, app)
+
+sslServer.listen(PORT, () => console.log(`Listening on port ${PORT}...`));
