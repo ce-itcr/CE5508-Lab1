@@ -86,6 +86,35 @@ router.get('/:id', (req, res) => {
 
 /**
  * @swagger
+ * /spaces/:cursor:/:length:
+ *   get:
+ *     summary: Get the page using cursor pagination method
+ *     tags: [Spaces]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The space id
+ *     responses:
+ *       200:
+ *         description: The space description by id
+ *         contens:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Space'
+ *       404:
+ *         description: The space was not found
+ */
+router.get('/:cursor/:length', (req, res) => {
+    var page = appDb.spaces.slice(parseInt(req.params.cursor), parseInt(req.params.cursor) + parseInt(req.params.length));
+    res.status(200).send(page)
+});
+
+
+/**
+ * @swagger
  * /spaces:
  *   post:
  *     summary: Create a new space
