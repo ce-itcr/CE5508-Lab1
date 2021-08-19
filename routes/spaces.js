@@ -86,7 +86,7 @@ router.get('/:id', (req, res) => {
 
 /**
  * @swagger
- * /spaces/:cursor:/:length:
+ * /spaces/:offset:/:limit:
  *   get:
  *     summary: Get the page using cursor pagination method
  *     tags: [Spaces]
@@ -107,8 +107,8 @@ router.get('/:id', (req, res) => {
  *       404:
  *         description: The space was not found
  */
-router.get('/:cursor/:length', (req, res) => {
-    var page = appDb.spaces.slice(parseInt(req.params.cursor), parseInt(req.params.cursor) + parseInt(req.params.length));
+router.get('/:offset/:limit', (req, res) => {
+    var page = appDb.spaces.slice(parseInt(req.params.offset), parseInt(req.params.limit) + parseInt(req.params.offset));
     res.status(200).send(page)
 });
 
